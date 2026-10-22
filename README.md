@@ -1,43 +1,39 @@
-# led-control
+# Windows RGB LED Control — OpenRGB and Lian Li LCD Notes
 
-One-click RGB off / RGB white for a PC with no bundled RGB software, using [OpenRGB](https://openrgb.org/) as the engine.
+Windows helpers for motherboard RGB / ARGB lighting through [OpenRGB](https://openrgb.org/), plus a technical report on **Lian Li TL Wireless LCD fan lighting and LCD backlights with L-Connect 3**.
 
-## Why this exists
+[繁體中文](README-繁體.md) · [Lian Li LCD lighting report](docs/lian-li-tl-wireless-lcd-lighting.md)
 
-My motherboard (ASUS ROG STRIX X870-A) and case fans (Lian Li SL V3) light up by default and there's no first-party app installed to turn that off — just the default rainbow cycling on the board's ARGB header. I'm a night-owl who wants the room dark to actually sleep, and didn't want to install a vendor's bloated RGB suite just to hit "off" once a day. OpenRGB already solves "control any RGB device from one place" — this repo is just two scripts and two double-click shortcuts wrapped around it so the daily action is one click, not a GUI hunt.
+## Choose the right control path
 
-## What it does
+| Goal | What this repository provides |
+|---|---|
+| Set OpenRGB-detected motherboard lighting black or white | Legacy Python scripts and Windows launchers |
+| Turn off TL Wireless LCD fan rings, fan displays and an 8.8-inch screen | A version-specific [L-Connect 3 report](docs/lian-li-tl-wireless-lcd-lighting.md), not a universal driver |
+| Keep original LCD images when turning lights back on | Report explains backlight-only changes; legacy OpenRGB scripts do not control LCD content |
 
-- `leds-off.cmd` → turns all detected motherboard/ARGB-header LEDs off (black)
-- `leds-white.cmd` → turns them all to plain white
-- `setup-once.cmd` → one-time setup: installs OpenRGB via `winget` if missing, elevates once (UAC) so OpenRGB can see the board, and lists what it detected
+The report documents a separately tested local adapter. That machine-specific adapter, device identifiers, backups and vendor binaries are **not** bundled here. These legacy launchers do not control every RGB device or any Lian Li LCD.
 
-Both `.cmd` files just call the matching Python script (`fans_off.py` / `leds_white.py`), which talks to the OpenRGB SDK over `127.0.0.1:6742`.
+## Legacy OpenRGB helpers
 
-## Requirements
+- `leds-off.cmd` invokes `fans_off.py`: requests black on motherboard devices, falling back to all detected devices if none are classified as a motherboard.
+- `leds-white.cmd` invokes `leds_white.py`: requests white using the same selection.
+- `setup-once.cmd` requests UAC, attempts OpenRGB installation through winget if missing, then lists detected devices. Its winget command automatically accepts package/source agreements; read those terms before choosing to run it, or install OpenRGB yourself.
 
-- Windows
-- [OpenRGB](https://openrgb.org/) (the `setup-once.cmd` script installs it for you via `winget`)
-- Python 3 with the `openrgb-python` package (`pip install openrgb-python`)
-- A motherboard/ARGB header that OpenRGB actually detects — check with `setup-once.cmd` first
+Requirements: Windows, Python 3, `openrgb-python`, and a running OpenRGB SDK server on `127.0.0.1:6742`. The setup script does not install the Python package or explicitly enable the SDK server. Configure those separately. The two daily wrappers only call Python; they do not themselves elevate.
 
-## Usage
+## Important limitations before running
 
-1. Run `setup-once.cmd` once. It self-elevates (UAC prompt) because ASUS board LEDs need one admin pass to be controllable, installs OpenRGB if it isn't there, and prints the detected devices.
-2. Keep OpenRGB running in the system tray — it has to stay open to keep driving the header in Direct mode.
-3. Day to day: double-click `leds-off.cmd` or `leds-white.cmd`. Each pops one UAC prompt.
+The legacy code attempts Direct mode, requests **120 LEDs** for LINEAR/MATRIX zones, then writes color to zones and devices. This fixed resize request is not validated against each controller's supported limits. Inspect the actual LED count and back up profiles before use; no universal clamping or hardware-compatibility guarantee is made.
 
-## How it works, briefly
+Many errors are caught and execution continues. A final `Done` message, a zero exit code or a detected device is **not** proof that all lighting changed. These scripts have not been newly hardware-tested as part of the report publication.
 
-OpenRGB exposes zones per device. Addressable (LINEAR/MATRIX) zones need to be in **Direct mode** before they can be resized or driven, and `openrgb-python`'s zone wrapper doesn't expose a "max LEDs" property — so both scripts force Direct mode, resize each addressable zone up to a generous count (OpenRGB clamps it to the header's real max), then set every zone and the whole device to the target color. That two-step "resize then color" order is the part that isn't obvious from the OpenRGB docs and is the main reason this isn't just a three-line script.
+"Off" requests black on selected devices; it does not power down fans, controllers or LCD decoders. Unsupported keyboards and vendor-specific displays need their own controls. Lighting commands use localhost; setup/package installation needs network access, and third-party software has its own behavior and policies.
 
-## Notes
+## Lian Li TL Wireless LCD report
 
-- "Off" means every detected LED is set to black — if something still glows faintly, that device probably needs its own profile; not all RGB hardware responds identically to "black."
-- Keyboards vary — if yours doesn't show up in `setup-once.cmd`'s device list, it's not controllable through this tool; most keyboards have a manual `Fn` + lighting key instead.
-- Everything here is local: OpenRGB talks to your hardware over localhost, nothing leaves your machine.
-- A Traditional Chinese version of this README is at [`README-繁體.md`](README-繁體.md).
+The [technical report](docs/lian-li-tl-wireless-lcd-lighting.md) covers separate RGB/backlight commands, the wrong-renderer default that left TL fan rings black, preserving loaded images, and the difference between service acceptance and physical verification. It includes the tested version and explicit limits rather than claiming universal support.
 
 ## License
 
-MIT
+[MIT](LICENSE). No vendor binaries, decompiled vendor source or original LCD artwork are redistributed.

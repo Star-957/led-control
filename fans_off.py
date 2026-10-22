@@ -1,7 +1,6 @@
 # Turn OFF motherboard ARGB-header fans via the OpenRGB SDK.
-# Fix v2: openrgb-python's Zone wrapper does NOT expose leds_max, and addressable zones
-# must be in DIRECT mode to be resized/driven. So: set Direct mode, resize addressable
-# (LINEAR/MATRIX) zones to a generous count (OpenRGB clamps to the real max), then black.
+# Legacy helper: attempts Direct mode, then a fixed addressable-zone resize.
+# The resize is not checked against each controller's limits. Read README warnings.
 import sys, time
 try:
     from openrgb import OpenRGBClient
@@ -10,7 +9,7 @@ except Exception as e:
     print("openrgb-python missing:", e); sys.exit(3)
 
 BLACK = RGBColor(0, 0, 0)
-RESIZE_TO = 120  # generous; OpenRGB clamps to the header's real max
+RESIZE_TO = 120  # legacy assumption; verify actual controller and LED count first
 
 def connect(retries=12):
     last = None

@@ -16,6 +16,6 @@ echo.
 echo Detected RGB devices (elevated):
 "%ORGB%" --list-devices
 echo.
-echo If devices are listed above, leds-off.cmd / leds-white.cmd will work.
+echo Detection is not a lighting test. Python, openrgb-python and the SDK server are also required.
 echo If the list is empty, your board may need OpenRGB opened once from the Start Menu.
 pause

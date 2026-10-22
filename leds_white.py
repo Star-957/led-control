@@ -8,7 +8,7 @@ except Exception as e:
     print("openrgb-python missing:", e); sys.exit(3)
 
 WHITE = RGBColor(255, 255, 255)
-RESIZE_TO = 120  # generous; OpenRGB clamps to the header's real max
+RESIZE_TO = 120  # legacy assumption; verify actual controller and LED count first
 
 def connect(retries=12):
     last = None
