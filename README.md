@@ -34,6 +34,16 @@ Many errors are caught and execution continues. A final `Done` message, a zero e
 
 The [technical report](docs/lian-li-tl-wireless-lcd-lighting.md) covers separate RGB/backlight commands, the wrong-renderer default that left TL fan rings black, preserving loaded images, and the difference between service acceptance and physical verification. It includes the tested version and explicit limits rather than claiming universal support.
 
+## Project layout
+
+- `led_control.py` - shared `set_led_color(rgb, client_name, label)` helper. Importing it never touches hardware; it connects to OpenRGB only when called (12 retries, 1.5 s apart).
+- `fans_off.py` / `leds_white.py` - thin wrappers that call the helper with black / white.
+- `test_led_control.py` - offline unit tests using a fake OpenRGB client: `python -m unittest test_led_control`.
+
+Exit codes: `0` done, `2` could not reach the OpenRGB server, `3` `openrgb-python` not installed.
+
+> Caution: if no device is reported as a motherboard, the helper falls back to **all** detected devices (GPU, RAM, peripherals). Check the device list from `setup-once.cmd` first.
+
 ## License
 
 [MIT](LICENSE). No vendor binaries, decompiled vendor source or original LCD artwork are redistributed.
